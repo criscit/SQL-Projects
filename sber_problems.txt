@@ -1,0 +1,59 @@
+
+11111111111111111111111111111
+
+SET @sql = NULL;
+SELECT
+  GROUP_CONCAT(DISTINCT
+    CONCAT(
+      'COUNT(CASE WHEN LoanNumber = ',
+      LoanNumber,
+      ' THEN 1 END) AS `',
+      CONCAT('Количество ', LoanNumber, ' договоров, оформленных в ', YEAR(LOAN_DATE)),
+      '`'
+    )
+  ) INTO @sql
+FROM (
+    SELECT l.CLIENT_ID, c.GENDER, l.LOAN_DATE,
+           ROW_NUMBER() OVER (PARTITION BY l.CLIENT_ID, YEAR(l.LOAN_DATE) ORDER BY l.LOAN_DATE) AS LoanNumber
+    FROM CLIENTS_TABLE c
+    INNER JOIN LOANS_TABLE l ON c.CLIENT_ID = l.CLIENT_ID
+) AS src;
+
+SET @sql = CONCAT('SELECT GENDER, ', @sql, ' 
+                   FROM (
+                       SELECT c.GENDER, l.LOAN_DATE,
+                              ROW_NUMBER() OVER (PARTITION BY l.CLIENT_ID, YEAR(l.LOAN_DATE) ORDER BY l.LOAN_DATE) AS LoanNumber
+                       FROM CLIENTS_TABLE c
+                       INNER JOIN LOANS_TABLE l ON c.CLIENT_ID = l.CLIENT_ID
+                   ) AS src
+                   GROUP BY GENDER');
+
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+
+
+222222222222222222222222222222
+
+
+
+WITH RECURSIVE r AS (
+  SELECT key, id, phone, mail
+  FROM t1
+  WHERE phone = '87778885566'
+  
+  UNION
+  
+  SELECT t1.key, t1.id, t1.phone, t1.mail
+  FROM t1
+  JOIN r ON t1.key = r.key 
+     OR t1.id = r.id   
+     OR t1.phone = r.phone 
+     OR t1.mail = r.mail
+)
+SELECT key, id, phone, mail
+FROM r
+
+
+
